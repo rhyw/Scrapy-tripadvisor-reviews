@@ -4,38 +4,38 @@
 import scrapy
 from myscraps.items import ReviewItem
 from scrapy import Request
+from scrapy.exceptions import CloseSpider
+
 
 class TripAdvisorReview(scrapy.Spider):
     name = "tripadvisor"
-    # Cities: Recife, Porto Alegre, Salvador, Brasilia, Fortaleza, Curitiba, Belo Horizonte, Vitoria, Florianopolis, Natal, Goiania.
-    start_urls = ["https://www.tripadvisor.com.br/Attractions-g304560-Activities-Recife_State_of_Pernambuco.html",\
-                    "https://www.tripadvisor.com.br/Attractions-g303546-Activities-Porto_Alegre_State_of_Rio_Grande_do_Sul.html",\
-                    "https://www.tripadvisor.com.br/Attractions-g303272-Activities-Salvador_State_of_Bahia.html",\
-                    "https://www.tripadvisor.com.br/Attractions-g303322-Activities-Brasilia_Federal_District.html",\
-                    "https://www.tripadvisor.com.br/Attractions-g303293-Activities-Fortaleza_State_of_Ceara.html",\
-                    "https://www.tripadvisor.com.br/Attractions-g303441-Activities-Curitiba_State_of_Parana.html",\
-                    "https://www.tripadvisor.com.br/Attractions-g303374-Activities-Belo_Horizonte_State_of_Minas_Gerais.html",\
-                    "https://www.tripadvisor.com.br/Attractions-g303320-Activities-Vitoria_State_of_Espirito_Santo.html",\
-                    "https://www.tripadvisor.com.br/Attractions-g303576-Activities-Florianopolis_State_of_Santa_Catarina.html",\
-                    "https://www.tripadvisor.com.br/Attractions-g303518-Activities-Natal_State_of_Rio_Grande_do_Norte.html",\
-                    "https://www.tripadvisor.com.br/Attractions-g303324-Activities-Goiania_State_of_Goias.html"]
+    start_urls = [
+        "https://www.tripadvisor.com/Attraction_Review-g60763-d136143-Reviews-or10-New_York_Historical_Society_Museum_Library-New_York_City_New_York.html"
+    ]
+    num_pages = 0
+    max_num_pages = 5
 
     def parse(self, response):
+        # each review corresponds to a separate page.
         urls = []
-        for href in response.xpath('//div[@class="property_title"]/a/@href').extract():
+        for href in response.xpath('//div[@class="quote"]/a/@href').getall():
             url = response.urljoin(href)
             if url not in urls:
                 urls.append(url)
 
-                yield scrapy.Request(url, callback=self.parse_page)
+                yield scrapy.Request(url, callback=self.parse_review_page)
 
-        next_page = response.xpath('//div[@class="unified pagination "]/a/@href').extract()
+        next_page = response.xpath('//div[@class="unified ui_pagination "]/a/@href').getall()
         if next_page:
+            self.num_pages += 1
+            if self.num_pages > self.max_num_pages:
+                raise CloseSpider('Search Exceeded %d' % self.max_num_pages)
+            # FIXME: use follow instead
             url = response.urljoin(next_page[-1])
             print url
             yield scrapy.Request(url, self.parse)
 
-    def parse_page(self, response):
+    def parse_review_page(self, response):
 
         review_page = response.xpath('//div[@class="wrap"]/div/a/@href').extract()
 
@@ -44,12 +44,10 @@ class TripAdvisorReview(scrapy.Spider):
                 url = response.urljoin(review_page[i])
                 yield scrapy.Request(url, self.parse_review)
 
-        next_page = response.xpath('//div[@class="unified pagination "]/a/@href').extract()
+        next_page = response.xpath('//div[@class="unified ui_pagination "]/a/@href').getall()
         if next_page:
             url = response.urljoin(next_page[-1])
-            yield scrapy.Request(url, self.parse_page)
-
-
+            yield scrapy.Request(url, self.parse_review_page)
 
     def parse_review(self, response):
 
@@ -61,8 +59,6 @@ class TripAdvisorReview(scrapy.Spider):
         ratings = response.xpath('//span[@class="rate sprite-rating_s rating_s"]/img/@alt').extract()
         rating = ratings[0][0]
 
-
         item['rating'] = rating
         item['review'] = content
         yield item
-
