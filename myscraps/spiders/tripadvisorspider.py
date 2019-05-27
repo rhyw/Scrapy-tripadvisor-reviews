@@ -6,13 +6,18 @@ import collections
 import scrapy
 from myscraps.items import ReviewItem
 from scrapy import Request
+import os
 # from scrapy.exceptions import CloseSpider
 
-urls_raw_filepath = "/home/yuwang/code/gh/Scrapy-tripadvisor-reviews/urls.raw"
+cur_dir = os.path.abspath(os.path.dirname(__file__))
+url_filename = "urls.txt"
+urls_filepath = os.path.abspath(os.path.join(cur_dir, os.pardir, os.pardir, url_filename))
 urls_raw = None
-with open(urls_raw_filepath, 'r') as urls_file:
+with open(urls_filepath, 'r') as urls_file:
     urls_raw = urls_file.read()
 urls = filter(None, urls_raw.split('\n'))
+if not urls:
+    raise ValueError("Empty file found: %s" % url_filename)
 
 
 class TripAdvisorReview(scrapy.Spider):
