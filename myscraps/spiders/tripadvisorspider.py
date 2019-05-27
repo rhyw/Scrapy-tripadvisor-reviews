@@ -60,6 +60,6 @@ class TripAdvisorReview(scrapy.Spider):
         item['experience_date'] = experience_date
         item['rating_date'] = rating_date
         item['location'] = location
-        # item['url'] = response.url
+        item['url'] = response.url
 
         yield item

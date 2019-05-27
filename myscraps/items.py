@@ -18,4 +18,4 @@ class ReviewItem(scrapy.Item):
     rating_date = scrapy.Field()
     experience_date = scrapy.Field()
     location = scrapy.Field()
-    # url = scrapy.Field()
+    url = scrapy.Field()

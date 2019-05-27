@@ -56,6 +56,10 @@ ROBOTSTXT_OBEY = False
 #    'myscraps.middlewares.MyCustomDownloaderMiddleware': 543,
 #}
 
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware': None,
+    'scrapy_user_agents.middlewares.RandomUserAgentMiddleware': 400,
+}
 # Enable or disable extensions
 # See http://scrapy.readthedocs.org/en/latest/topics/extensions.html
 #EXTENSIONS = {
@@ -89,3 +93,6 @@ ROBOTSTXT_OBEY = False
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
+FAKEUSERAGENT_FALLBACK = "Mozilla"
+COOKIES_ENABLED = False
+DOWNLOAD_DELAY = 0.25
