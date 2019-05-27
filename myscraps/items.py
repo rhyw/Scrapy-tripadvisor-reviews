@@ -16,4 +16,6 @@ class ReviewItem(scrapy.Item):
     review_text = scrapy.Field()
     ratings = scrapy.Field()
     rating_date = scrapy.Field()
+    experience_date = scrapy.Field()
     location = scrapy.Field()
+    # url = scrapy.Field()
