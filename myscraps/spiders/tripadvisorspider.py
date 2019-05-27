@@ -6,15 +6,19 @@ import collections
 import scrapy
 from myscraps.items import ReviewItem
 from scrapy import Request
-from scrapy.exceptions import CloseSpider
+# from scrapy.exceptions import CloseSpider
+
+urls_raw_filepath = "/home/yuwang/code/gh/Scrapy-tripadvisor-reviews/urls.raw"
+urls_raw = None
+with open(urls_raw_filepath, 'r') as urls_file:
+    urls_raw = urls_file.read()
+urls = filter(None, urls_raw.split('\n'))
 
 
 class TripAdvisorReview(scrapy.Spider):
     name = "tripadvisor"
-    start_urls = [
-        #"https://www.tripadvisor.com/Attraction_Review-g60763-d136143-Reviews-or10-New_York_Historical_Society_Museum_Library-New_York_City_New_York.html"
-        "https://www.tripadvisor.cn/Attraction_Review-g187497-d190166-Reviews-Basilica_of_the_Sagrada_Familia-Barcelona_Catalonia.html"
-    ]
+    start_urls = urls
+
     num_pages = 0
     max_num_pages = 200000
     rating_pattern = re.compile(r'.*(\d{1})\d{1}')
@@ -31,9 +35,9 @@ class TripAdvisorReview(scrapy.Spider):
 
         next_page = response.xpath('//div[@class="unified ui_pagination "]/a/@href').getall()
         if next_page:
-            self.num_pages += 1
-            if self.num_pages > self.max_num_pages:
-                raise CloseSpider('Search Exceeded %d' % self.max_num_pages)
+            # self.num_pages += 1
+            # if self.num_pages > self.max_num_pages:
+                # raise CloseSpider('Search Exceeded %d' % self.max_num_pages)
             # FIXME: use follow instead
             url = response.urljoin(next_page[-1])
             print url
