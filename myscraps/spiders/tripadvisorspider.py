@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import re
+import collections
 import scrapy
 from myscraps.items import ReviewItem
 from scrapy import Request
@@ -13,7 +15,7 @@ class TripAdvisorReview(scrapy.Spider):
         "https://www.tripadvisor.com/Attraction_Review-g60763-d136143-Reviews-or10-New_York_Historical_Society_Museum_Library-New_York_City_New_York.html"
     ]
     num_pages = 0
-    max_num_pages = 5
+    max_num_pages = 1
 
     def parse(self, response):
         # each review corresponds to a separate page.
@@ -23,7 +25,7 @@ class TripAdvisorReview(scrapy.Spider):
             if url not in urls:
                 urls.append(url)
 
-                yield scrapy.Request(url, callback=self.parse_review_page)
+                yield scrapy.Request(url, callback=self.parse_review)
 
         next_page = response.xpath('//div[@class="unified ui_pagination "]/a/@href').getall()
         if next_page:
@@ -35,30 +37,38 @@ class TripAdvisorReview(scrapy.Spider):
             print url
             yield scrapy.Request(url, self.parse)
 
-    def parse_review_page(self, response):
+    # def parse_review_page(self, response):
 
-        review_page = response.xpath('//div[@class="wrap"]/div/a/@href').extract()
+    #     review_page = response.xpath('//div[@class="wrap"]/div/a/@href').extract()
 
-        if review_page:
-            for i in range(len(review_page)):
-                url = response.urljoin(review_page[i])
-                yield scrapy.Request(url, self.parse_review)
+    #     if review_page:
+    #         for i in range(len(review_page)):
+    #             url = response.urljoin(review_page[i])
+    #             yield scrapy.Request(url, self.parse_review)
 
-        next_page = response.xpath('//div[@class="unified ui_pagination "]/a/@href').getall()
-        if next_page:
-            url = response.urljoin(next_page[-1])
-            yield scrapy.Request(url, self.parse_review_page)
+    #     next_page = response.xpath('//div[@class="unified ui_pagination "]/a/@href').getall()
+    #     if next_page:
+    #         url = response.urljoin(next_page[-1])
+    #         yield scrapy.Request(url, self.parse_review_page)
 
     def parse_review(self, response):
 
         item = ReviewItem()
 
-        contents = response.xpath('//div[@class="entry"]/p').extract()
-        content = contents[0].encode("utf-8")
+        content = response.css('div.meta_inner')
+        title = content.xpath('.//h1[@class="title"]/text()').get()
+        author = content.css('div.info_text').css('div::text').get()
+        review_text = content.css('span.fullText::text').get()
+        rating_date = content.css('span.ratingDate::text').get()
+        ratings = content.css('span.ui_bubble_rating')[0].attrib['class']
+        location = content.xpath('.//strong/text()').get()
+        # ratings = response.xpath('//span[@class="rate sprite-rating_s rating_s"]/img/@alt').extract()
+        item = collections.OrderedDict()
+        item['title'] = title
+        item['author'] = author
+        item['review_text'] = review_text
+        item['ratings'] = re.search(r'.*(\d{1})\d{1}', ratings).group(1)
+        item['rating_date'] = rating_date
+        item['location'] = location
 
-        ratings = response.xpath('//span[@class="rate sprite-rating_s rating_s"]/img/@alt').extract()
-        rating = ratings[0][0]
-
-        item['rating'] = rating
-        item['review'] = content
         yield item

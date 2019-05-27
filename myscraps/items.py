@@ -11,6 +11,9 @@ import scrapy
 
 class ReviewItem(scrapy.Item):
     # Items to get
-    rating = scrapy.Field()
-    review = scrapy.Field()
-
+    title = scrapy.Field()
+    author = scrapy.Field()
+    review_text = scrapy.Field()
+    ratings = scrapy.Field()
+    rating_date = scrapy.Field()
+    location = scrapy.Field()
