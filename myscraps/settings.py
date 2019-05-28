@@ -96,3 +96,6 @@ DOWNLOADER_MIDDLEWARES = {
 FAKEUSERAGENT_FALLBACK = "Mozilla"
 COOKIES_ENABLED = False
 DOWNLOAD_DELAY = 0.25
+LOG_LEVEL = "INFO"
+# https://docs.scrapy.org/en/latest/topics/broad-crawls.html#disable-retries
+RETRY_ENABLED = False
